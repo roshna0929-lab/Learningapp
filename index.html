@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Multiple Intelligence Learning App</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+
+body{
+font-family:Arial;
+margin:0;
+background:#f2f2f2;
+}
+
+header{
+background:#4CAF50;
+color:white;
+padding:10px;
+display:flex;
+justify-content:space-between;
+}
+
+button{
+padding:8px;
+margin:5px;
+cursor:pointer;
+border-radius:5px;
+}
+
+.page{
+display:none;
+padding:20px;
+}
+
+.active{
+display:block;
+}
+
+.card{
+background:white;
+padding:15px;
+margin:10px 0;
+border-radius:10px;
+box-shadow:0 0 5px rgba(0,0,0,0.2);
+}
+
+.dark{
+background:#222;
+color:white;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<header>
+
+<div>
+<button onclick="speakPage()">🔊</button>
+</div>
+
+<div>
+<button onclick="toggleTheme()">🌙</button>
+<button onclick="showPage('adminLogin')">👤</button>
+</div>
+
+</header>
+
+<!-- LOGIN PAGE -->
+
+<div id="login" class="page active">
+
+<h2>Login</h2>
+
+<input id="loginUser" placeholder="Username"><br><br>
+<input id="loginPass" type="password" placeholder="Password"><br><br>
+
+<button onclick="login()">Login</button>
+
+<h3>Signup</h3>
+
+<input id="name" placeholder="Name"><br><br>
+<input id="number" placeholder="Number"><br><br>
+<input id="dob" placeholder="DOB YYYY-MM-DD"><br><br>
+
+<button onclick="signup()">Create Account</button>
+
+</div>
+
+<!-- CLASS -->
+
+<div id="class" class="page">
+
+<h2>Select Class</h2>
+
+<button onclick="showPage('subject')">Class 6</button>
+<button onclick="showPage('subject')">Class 7</button>
+
+</div>
+
+<!-- SUBJECT -->
+
+<div id="subject" class="page">
+
+<h2>Select Subject</h2>
+
+<button onclick="showPage('chapter')">English</button>
+<button onclick="showPage('chapter')">Maths</button>
+<button onclick="showPage('chapter')">Science</button>
+
+</div>
+
+<!-- CHAPTER -->
+
+<div id="chapter" class="page">
+
+<h2>Select Chapter</h2>
+
+<button onclick="showPage('mi')">Chapter 1</button>
+<button onclick="showPage('mi')">Chapter 2</button>
+
+</div>
+
+<!-- MI PAGE -->
+
+<div id="mi" class="page">
+
+<h2>Select Intelligence Type</h2>
+
+<button onclick="selectMI('Linguistic')">Linguistic</button>
+<button onclick="selectMI('Logical')">Logical</button>
+<button onclick="selectMI('Spatial')">Spatial</button>
+<button onclick="selectMI('Bodily')">Bodily</button>
+<button onclick="selectMI('Musical')">Musical</button>
+<button onclick="selectMI('Interpersonal')">Interpersonal</button>
+<button onclick="selectMI('Intrapersonal')">Intrapersonal</button>
+<button onclick="selectMI('Naturalistic')">Naturalistic</button>
+
+<div class="card">
+
+<h3>Customize Learning</h3>
+
+<input id="interestInput" placeholder="Example: birds, football, music">
+
+<button onclick="saveInterest()">Apply</button>
+
+<p id="interestResult"></p>
+
+</div>
+
+</div>
+
+<!-- LEARNING -->
+
+<div id="learning" class="page">
+
+<h2>Lesson</h2>
+
+<div class="card">
+
+<p id="lessonText">
+
+Plants need sunlight, water and soil to grow.
+They produce oxygen and help living beings survive.
+
+</p>
+
+</div>
+
+<button onclick="startAssessment()">Complete</button>
+
+</div>
+
+<!-- ASSESSMENT -->
+
+<div id="assessment" class="page">
+
+<h2>Assessment</h2>
+
+<div class="card">
+
+<p>What do plants need to grow?</p>
+
+<button onclick="answer(true)">Sunlight</button>
+<button onclick="answer(false)">Plastic</button>
+<button onclick="answer(false)">Metal</button>
+
+</div>
+
+<button style="background:red;color:white"
+onclick="saveDoubt()">❗ Doubt</button>
+
+<p id="result"></p>
+
+<button onclick="finishAssessment()">Finish</button>
+
+</div>
+
+<!-- RESULT -->
+
+<div id="resultPage" class="page">
+
+<h2>Your Result</h2>
+
+<p id="scoreText"></p>
+
+<canvas id="miChart"></canvas>
+
+</div>
+
+<!-- ADMIN LOGIN -->
+
+<div id="adminLogin" class="page">
+
+<h2>Admin Login</h2>
+
+<input id="adminPass" type="password"><br><br>
+
+<button onclick="adminLogin()">Access</button>
+
+</div>
+
+<!-- ADMIN DASHBOARD -->
+
+<div id="admin" class="page">
+
+<h2>Admin Dashboard</h2>
+
+<div class="card">
+
+<p>Total Students: <span id="totalStudents"></span></p>
+<p>Total Doubts: <span id="totalDoubts"></span></p>
+<p>Total Attempts: <span id="totalAttempts"></span></p>
+
+</div>
+
+<h3>Students</h3>
+<ul id="studentList"></ul>
+
+<h3>Doubts</h3>
+<ul id="queryList"></ul>
+
+<h3>Wrong Answers</h3>
+<ul id="wrongList"></ul>
+
+<h3>Teacher Feedback</h3>
+
+<textarea id="feedbackText"></textarea><br>
+<button onclick="saveFeedback()">Send Feedback</button>
+
+<ul id="feedbackList"></ul>
+
+</div>
+
+<script>
+
+let users=[]
+let doubts=[]
+let wrongAnswers=[]
+let feedbacks=[]
+let attempts=[]
+let score=0
+let interest=""
+
+function showPage(id){
+
+document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"))
+
+document.getElementById(id).classList.add("active")
+
+}
+
+function signup(){
+
+let name=document.getElementById("name").value
+let number=document.getElementById("number").value
+let dob=document.getElementById("dob").value
+
+let username=name+"_"+number
+let password=dob
+
+users.push({username,password})
+
+alert("Account created\nUsername: "+username)
+
+}
+
+function login(){
+
+let user=document.getElementById("loginUser").value
+let pass=document.getElementById("loginPass").value
+
+let found=users.find(u=>u.username==user && u.password==pass)
+
+if(found){
+
+showPage("class")
+
+}else{
+
+alert("Invalid login")
+
+}
+
+}
+
+function selectMI(mi){
+
+showPage("learning")
+
+}
+
+function saveInterest(){
+
+interest=document.getElementById("interestInput").value
+
+document.getElementById("interestResult").innerText=
+"Learning examples will include "+interest
+
+}
+
+function startAssessment(){
+
+showPage("assessment")
+
+}
+
+function answer(correct){
+
+if(correct){
+
+score++
+document.getElementById("result").innerText="Correct"
+
+}else{
+
+wrongAnswers.push("Plant question wrong")
+document.getElementById("result").innerText="Wrong"
+
+}
+
+}
+
+function saveDoubt(){
+
+doubts.push("Student doubt in plant topic")
+
+alert("Doubt stored")
+
+}
+
+function calculateLevel(score,total){
+
+let percent=(score/total)*100
+
+if(percent<40)return "Low"
+
+else if(percent<70)return "Average"
+
+else return "Good"
+
+}
+
+function finishAssessment(){
+
+attempts.push(score)
+
+showPage("resultPage")
+
+let level=calculateLevel(score,1)
+
+document.getElementById("scoreText").innerText=
+"Score: "+score+"/1 | Intelligence Level: "+level
+
+drawChart()
+
+}
+
+function drawChart(){
+
+new Chart(document.getElementById("miChart"),{
+
+type:"radar",
+
+data:{
+labels:[
+"Linguistic",
+"Logical",
+"Spatial",
+"Bodily",
+"Musical",
+"Interpersonal",
+"Intrapersonal",
+"Naturalistic"
+],
+
+datasets:[{
+label:"Intelligence Level",
+data:[
+Math.random()*100,
+Math.random()*100,
+Math.random()*100,
+Math.random()*100,
+Math.random()*100,
+Math.random()*100,
+Math.random()*100,
+Math.random()*100
+]
+}]
+
+}
+
+})
+
+}
+
+function adminLogin(){
+
+let pass=document.getElementById("adminPass").value
+
+if(pass=="admin123"){
+
+showPage("admin")
+
+loadAdmin()
+
+}else{
+
+alert("Wrong password")
+
+}
+
+}
+
+function loadAdmin(){
+
+document.getElementById("totalStudents").innerText=users.length
+document.getElementById("totalDoubts").innerText=doubts.length
+document.getElementById("totalAttempts").innerText=attempts.length
+
+let list=document.getElementById("studentList")
+list.innerHTML=""
+
+users.forEach(u=>{
+
+let li=document.createElement("li")
+li.innerText=u.username
+list.appendChild(li)
+
+})
+
+let q=document.getElementById("queryList")
+q.innerHTML=""
+
+doubts.forEach(d=>{
+
+let li=document.createElement("li")
+li.innerText=d
+q.appendChild(li)
+
+})
+
+let w=document.getElementById("wrongList")
+w.innerHTML=""
+
+wrongAnswers.forEach(d=>{
+
+let li=document.createElement("li")
+li.innerText=d
+w.appendChild(li)
+
+})
+
+displayFeedback()
+
+}
+
+function saveFeedback(){
+
+let text=document.getElementById("feedbackText").value
+
+feedbacks.push(text)
+
+displayFeedback()
+
+}
+
+function displayFeedback(){
+
+let list=document.getElementById("feedbackList")
+list.innerHTML=""
+
+feedbacks.forEach(f=>{
+
+let li=document.createElement("li")
+li.innerText=f
+list.appendChild(li)
+
+})
+
+}
+
+function toggleTheme(){
+
+document.body.classList.toggle("dark")
+
+}
+
+function speakPage(){
+
+let text=document.body.innerText
+let speech=new SpeechSynthesisUtterance(text)
+speechSynthesis.speak(speech)
+
+}
+
+</script>
+
+</body>
+</html>
